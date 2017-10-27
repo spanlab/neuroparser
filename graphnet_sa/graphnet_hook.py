@@ -1,4 +1,3 @@
-
 import os, sys, time
 import numpy as np 
 import scipy.optimize
@@ -9,18 +8,16 @@ import pylab as pl
 pl.ion()
 from nipy.io.api import load_image
 from nipy.core.api import Image
-
-
-''' TODO: THESE IMPORTS NEED TO BE FIXED:
+import simplejson
 
 from optimization.cwpath import cwpath, strategy
 from optimization.cwpath.cwpath import inner1d
 from optimization.graphs.graph_laplacian import construct_adjacency_list
 
-path_to_graphnetC_packages = os.path.abspath('./graphnetc/.')
+path_to_graphnetC_packages = os.path.abspath('/Users/span/neuroparser/optimization/cwpath/.')
+print(os.listdir(path_to_graphnetC_packages))
 sys.path.append(path_to_graphnetC_packages)
-import graphnet
-'''
+import optimization.cwpath.graphnet as graphnet
 
 from datamanager import NiftiTools, simple_normalize
 from crossvalidation import CVObject

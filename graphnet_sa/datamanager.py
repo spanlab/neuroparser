@@ -1,14 +1,17 @@
-
+import random
 import functools
 import os, glob, shutil
 import subprocess
 import sys, time
-import numpy as numpy
+import numpy as np
 import scipy as sp 
 import nibabel as nib
 from baseclasses import Process
 from afnifunctions import AfniWrapper
 from directorytools import glob_remove
+from pprint import pprint
+from nipy.io.api import load_image
+
 
 
 def simple_normalize(X, axis=0):
@@ -732,7 +735,6 @@ class BrainData(DataManager):
         super(BrainData, self).__init__(variable_dict=variable_dict)
         self.subject_data_dict = {}
         self.nifti = NiftiTools()
-        self.vector = VectorTools()
     
     
     
@@ -812,7 +814,7 @@ class BrainData(DataManager):
                     print 'respnse vector not found: ', vec
             else:
                 
-                respvec = self.vector.read(vec, usefloat=True)
+                respvec = np.genfromtxt(vec)
                 subject_key = os.path.split(subject)[1]
                 
                 if verbose:
@@ -887,7 +889,7 @@ class BrainData(DataManager):
         
         
     def save_unmasked_coefs(self, unmasked, nifti_filename, affine=None,
-                            talairach_template_path='./TT_N27+tlrc.'):
+                            talairach_template_path='~/abin/TT_N27+tlrc.'):
         '''
         Simple function to save the unmasked coefficients to a specified nifti.
         Affine is usually self.mask_affine, but can be specified.
@@ -902,16 +904,7 @@ class BrainData(DataManager):
         glob_remove(nifti_filename)#[:-4])
             
         self.nifti.save_nifti(unmasked, affine, nifti_filename)
-        
-        time.sleep(0.25)
-        
-        self.nifti.convert_to_afni(nifti_filename, nifti_filename)#[:-4])
-        
-        time.sleep(0.25)
-        
-        subprocess.call(['3drefit','-view','tlrc',nifti_filename+'+orig.'])
-        
-        
+ 
         
     def make_masks(self, mask_path, ntrs, reverse_transpose=True, verbose=True):
         

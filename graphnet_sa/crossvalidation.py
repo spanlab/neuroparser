@@ -4,7 +4,7 @@ import random
 import itertools
 import functools
 from pprint import pprint
-from process import Process
+from baseclasses import Process
 
 
 

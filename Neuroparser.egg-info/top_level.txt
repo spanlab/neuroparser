@@ -1,0 +1,6 @@
+cwpath
+examples
+graphnet_sa
+gui
+optimization
+scons

@@ -1,0 +1,9 @@
+test_data/*
+build/*
+
+*.c
+
+npvenv
+.DS_Store
+*.nii
+*.json

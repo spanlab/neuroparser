@@ -1040,7 +1040,9 @@ def _compute_Lbeta(list adj,
     row = adj[k]
 #    for i in range(row.shape[0]):
     for i in range(len(row)):
-        linear_term += beta[row[i]]
+        index = row[i][0]
+        if index > 0:
+          linear_term += beta[row[i][0]]
 
     return -2*linear_term, quad_term
 

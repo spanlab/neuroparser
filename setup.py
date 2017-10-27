@@ -37,7 +37,7 @@ setup(
     author = "Logan Grosenick, Brad Klingenberg, Jonathan Taylor",
     author_email = "logang@gmail.com",
     description = "Neuroparser is a package for applying supervised and unsupervised statistical learning methods to large neuroimaging data.", 
-    long_description=read('README'),
+    long_description=read('README.md'),
     license = "PSF",
     keywords = ["fmri", "sparse", "structured", "multivariate", "calcium imaging", "neuronal dynamics"],
     url = "https://github.com/logang/neuroparser", 
