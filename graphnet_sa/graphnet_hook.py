@@ -14,8 +14,7 @@ from optimization.cwpath import cwpath, strategy
 from optimization.cwpath.cwpath import inner1d
 from optimization.graphs.graph_laplacian import construct_adjacency_list
 
-path_to_graphnetC_packages = os.path.abspath('/Users/span/neuroparser/optimization/cwpath/.')
-print(os.listdir(path_to_graphnetC_packages))
+path_to_graphnetC_packages = os.path.abspath('/scratch/PI/knutson/neuroparser/optimization/cwpath/.')
 sys.path.append(path_to_graphnetC_packages)
 import optimization.cwpath.graphnet as graphnet
 

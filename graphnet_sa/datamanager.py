@@ -11,7 +11,8 @@ from afnifunctions import AfniWrapper
 from directorytools import glob_remove
 from pprint import pprint
 from nipy.io.api import load_image
-
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 
 
 def simple_normalize(X, axis=0):
@@ -248,6 +249,8 @@ class DataManager(Process):
         self.X = []
         self.Y = []
         self.subject_indices = {}
+        
+
 
         if not downsample_type:
 
@@ -358,7 +361,8 @@ class DataManager(Process):
                                 self.Y.append(c)
 
                 self._xy_matrix_tracker_multiclass(classes)
-                    
+
+            
         self.X = np.array(self.X)
         self.Y = np.array(self.Y)
         #pprint(self.Y)
@@ -404,14 +408,14 @@ class DataManager(Process):
         self.X = []
         self.Y = []
         self.subject_indices = {}
-        
-        
+        single_observation_per_subject = False
         if not downsample_type:
-            
             for subject, [trials, responses] in self.subject_design.items():
                 self.subject_indices[subject] = []
                 
                 if not with_replacement:
+                    print("not with replacement...")
+
                     for trial, response in zip(trials, responses):
                         self.subject_indices[subject].append(len(self.X))
                         self.X.append(trial)
@@ -436,14 +440,24 @@ class DataManager(Process):
                             negative_trials.append(trial)
                             
                     if min(len(positive_trials), len(negative_trials)) == 0:
-                        del self.subject_indices[subject]
+                        if max(len(positive_trials), len(negative_trials)) == 1:
+                            # then we only have a single observation
+                            print("single observation per subject, assuming downsampling at subject level")
+                            print("if only one subject has one observation, comment out datamanager444")
+                            self.X.append(trial)
+                            self.subject_indices[subject].append(len(self.X))
+                            new_y = 1 if len(positive_trials)> len(negative_trials) else -1
+                            self.Y.append(float(new_y))
+                            single_observation_per_subject = True
+                        else:
+                            del self.subject_indices[subject]
                     
                     else:
                         if not replacement_ceiling:
                             upper_length = max(len(positive_trials), len(negative_trials))
                         else:
                             upper_length = replacement_ceiling
-                        
+
                         for set in [positive_trials, negative_trials]:
                             random.shuffle(set)
                             
@@ -460,11 +474,12 @@ class DataManager(Process):
                         self.Y.extend([Yreplace[1] for x in range(upper_length)])
         
                 if verbose:
+
                     self._xy_matrix_tracker(Yreplace)
                     
                     
                     
-        elif downsample_type == 'group':
+        elif downsample_type == 'trial':
             
             positive_trials = []
             negative_trials = []
@@ -581,6 +596,9 @@ class DataManager(Process):
         self.X = np.array(self.X)
         self.Y = np.array(self.Y)
         
+        if single_observation_per_subject:
+            sm = SMOTE(random_state=42)
+            self.X, self.Y = sm.fit_sample(self.X, self.Y)        
         
     def merge_datamanagers(self, mergeable_dm):
         
@@ -657,9 +675,11 @@ class DataManager(Process):
         print 'normalizing X'
         print 'previous X sum', np.sum(self.X)
         #self.X = preprocessing.normalize(self.X, axis=1)
-        self.X = simple_normalize(self.X, axis=0)
+        #self.X = simple_normalize(self.X, axis=0)
+        scaler= preprocessing.StandardScaler(copy=False)
+        scaler.fit(self.X)
+        self.X = scaler.transform(self.X)
         print 'post-normalization X sum', np.sum(self.X)
-        
         
     def scaleX(self):
         print 'scaling X'
@@ -815,6 +835,8 @@ class BrainData(DataManager):
             else:
                 
                 respvec = np.genfromtxt(vec)
+                if respvec.ndim==0:
+                    respvec = np.expand_dims(respvec, 1)
                 subject_key = os.path.split(subject)[1]
                 
                 if verbose:
@@ -839,6 +861,7 @@ class BrainData(DataManager):
         vector and the stripped Y vector. Used by masked_data().
         '''
         
+
         inds = [i for i,x in enumerate(trialsvec) if x != 0.]
         y = [x for x in trialsvec if x != 0]
         return inds, y
@@ -1027,8 +1050,8 @@ class BrainData(DataManager):
         
         ntrs = len(selected_trs)
         
-        p = np.prod(image.shape[:-1])
-        
+
+
         trial_inds, response = self.parse_trialsvec(trialsvec)
         
         ntrials = len(trial_inds)
@@ -1040,10 +1063,14 @@ class BrainData(DataManager):
         Y = np.zeros(ntrials)
         
         reselect_trs = [x-1 for x in selected_trs]
-        
+        p = np.prod(image.shape[:-1])
         if reverse_transpose:
-            im = np.transpose(np.asarray(image), [3, 2, 1, 0])
-        
+            imdata = np.asarray(image)
+            if imdata.ndim==3:
+                imdata = np.expand_dims(imdata, 3)
+            p = np.prod(imdata.shape[:-1])
+            im = np.transpose(imdata, [3, 2, 1, 0])
+
             for i in range(ntrials):
                 if len(im) > trial_inds[i]+reselect_trs[-1]+lag:
                     # OLD VERSION: could only do a continuous range
@@ -1139,7 +1166,7 @@ class BrainData(DataManager):
     def normalize_data(self, data, verbose=True):
 
         '''
-        a typical normalization function: subtracts the means and divides by
+        a cal normalization function: subtracts the means and divides by
         the standard deviation, column-wise
         '''
 

@@ -4,7 +4,7 @@ Neuroparser.egg*
 
 *.c
 
-npvenv
+*venv
 .DS_Store
 *.nii
 *.json
